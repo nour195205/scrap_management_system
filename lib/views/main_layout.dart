@@ -113,7 +113,7 @@ class _SidebarState extends State<_Sidebar> {
                     _logo(),
                     if (_expanded) ...[
                       const SizedBox(width: 10),
-                      Text('ميزاني',
+                      Text('قاسم',
                           style: GoogleFonts.cairo(
                             color: AppColors.textPrimary,
                             fontSize: 22,

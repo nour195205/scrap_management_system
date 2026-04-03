@@ -34,7 +34,7 @@ class MizanyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ميزاني - إدارة الخردة',
+      title: 'قاسم - إدارة الخردة',
       theme: AppTheme.dark,
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
