@@ -180,10 +180,10 @@ class _CapitalScreenState extends State<CapitalScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final v = double.tryParse(_setCtrl.text);
                 if (v == null) return;
-                state.setCapital(v);
+                await state.setCapital(v);
                 _setCtrl.clear();
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('✅ تم تحديث رأس المال', style: GoogleFonts.cairo()),
@@ -314,10 +314,10 @@ class _CapitalScreenState extends State<CapitalScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final v = double.tryParse(_addCtrl.text);
                 if (v == null || v <= 0) return;
-                state.adjustCapital(_isAdding ? v : -v);
+                await state.adjustCapital(_isAdding ? v : -v);
                 _addCtrl.clear();
                 setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(

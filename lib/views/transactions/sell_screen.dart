@@ -411,9 +411,9 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final error = context.read<AppState>().registerSell(
+    final error = await context.read<AppState>().registerSell(
       productId: _selectedProduct!.id,
       weightKg: _weightKg,
       unitPricePerKg: _unitPrice,

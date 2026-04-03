@@ -379,9 +379,9 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final error = context.read<AppState>().registerBuy(
+    final error = await context.read<AppState>().registerBuy(
       productId: _selectedProduct!.id,
       weightKg: _weightKg,
       unitPricePerKg: _unitPrice,

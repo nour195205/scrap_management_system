@@ -1,13 +1,27 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'services/app_state.dart';
 import 'app_theme.dart';
 import 'views/main_layout.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // تفعيل FFI للـ Desktop (Windows / Linux / macOS)
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  // تحميل البيانات من قاعدة البيانات
+  final appState = AppState();
+  await appState.initFromDatabase();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState()..loadSampleData(),
+    ChangeNotifierProvider.value(
+      value: appState,
       child: const MizanyApp(),
     ),
   );

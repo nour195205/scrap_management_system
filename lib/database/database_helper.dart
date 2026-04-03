@@ -1,77 +1,172 @@
-import 'dart:async';
-import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../models/product_model.dart';
+import '../models/transaction_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
-  static Database? _database;
+  static Database? _db;
 
   factory DatabaseHelper() => _instance;
-
   DatabaseHelper._internal();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    if (_db != null) return _db!;
+    _db = await _initDatabase();
+    return _db!;
   }
 
   Future<Database> _initDatabase() async {
-    // تجهيز ffi للعمل على الديسكتوب
-    sqfliteFfiInit();
-    var databaseFactory = databaseFactoryFfi;
+    final dir  = await getApplicationDocumentsDirectory();
+    final path = join(dir.path, 'mizany_v2.db');
 
-    // تحديد مكان الحفظ (فولدر المستندات للبرنامج)
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "mizany_database.db");
-
-    return await databaseFactory.openDatabase(
+    return await databaseFactoryFfi.openDatabase(
       path,
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: _onCreate,
-      ),
+      options: OpenDatabaseOptions(version: 1, onCreate: _onCreate),
     );
   }
 
-  // إنشاء الجداول لأول مرة
   Future _onCreate(Database db, int version) async {
-    // 1. جدول المنتجات (المخزون)
+    // ── جدول الأصناف ──
     await db.execute('''
       CREATE TABLE products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        current_stock REAL DEFAULT 0.0,
-        buy_price REAL DEFAULT 0.0,
-        sell_price REAL DEFAULT 0.0
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        name            TEXT    NOT NULL,
+        current_stock   REAL    DEFAULT 0.0,
+        buy_price       REAL    DEFAULT 0.0,
+        sell_price      REAL    DEFAULT 0.0,
+        min_stock_alert REAL    DEFAULT 100.0,
+        created_at      TEXT    NOT NULL
       )
     ''');
 
-    // 2. جدول العمليات (بيع وشراء)
+    // ── جدول العمليات ──
     await db.execute('''
       CREATE TABLE transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id INTEGER,
-        type TEXT, -- 'BUY' or 'SELL'
-        weight REAL,
-        unit_price REAL,
-        total_price REAL,
-        date TEXT,
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id   INTEGER,
+        product_name TEXT,
+        type         TEXT,
+        weight       REAL,
+        unit_price   REAL,
+        total_price  REAL,
+        net_profit   REAL DEFAULT 0.0,
+        date         TEXT,
+        notes        TEXT,
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
     ''');
 
-    // 3. جدول رأس المال (الخزنة)
+    // ── جدول الخزنة ──
     await db.execute('''
       CREATE TABLE capital (
-        id INTEGER PRIMARY KEY,
+        id      INTEGER PRIMARY KEY,
         balance REAL DEFAULT 0.0
       )
     ''');
-    
-    // وضع مبلغ مبدئي في الخزنة (مثلاً 0)
     await db.insert('capital', {'id': 1, 'balance': 0.0});
+  }
+
+  // ════════════════════════════════════
+  //  PRODUCTS
+  // ════════════════════════════════════
+  Future<int> insertProduct(Product p) async {
+    final db = await database;
+    return await db.insert('products', {
+      'name': p.name,
+      'current_stock':   p.currentStock,
+      'buy_price':       p.buyPrice,
+      'sell_price':      p.sellPrice,
+      'min_stock_alert': p.minStockAlert,
+      'created_at':      p.createdAt.toIso8601String(),
+    });
+  }
+
+  Future<void> updateProduct(Product p) async {
+    final db = await database;
+    await db.update('products', {
+      'name':            p.name,
+      'current_stock':   p.currentStock,
+      'buy_price':       p.buyPrice,
+      'sell_price':      p.sellPrice,
+      'min_stock_alert': p.minStockAlert,
+    }, where: 'id = ?', whereArgs: [p.id]);
+  }
+
+  Future<void> updateProductStock(int id, double newStock) async {
+    final db = await database;
+    await db.update('products', {'current_stock': newStock},
+        where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteProduct(int id) async {
+    final db = await database;
+    await db.delete('products', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Product>> getAllProducts() async {
+    final db   = await database;
+    final maps = await db.query('products', orderBy: 'created_at ASC');
+    return maps.map((m) => Product.fromMap({
+      'id':              m['id'],
+      'name':            m['name'],
+      'current_stock':   m['current_stock'],
+      'buy_price':       m['buy_price'],
+      'sell_price':      m['sell_price'],
+      'min_stock_alert': m['min_stock_alert'],
+      'created_at':      m['created_at'],
+    })).toList();
+  }
+
+  // ════════════════════════════════════
+  //  TRANSACTIONS
+  // ════════════════════════════════════
+  Future<int> insertTransaction(ScrapTransaction t) async {
+    final db = await database;
+    return await db.insert('transactions', {
+      'product_id':   t.productId,
+      'product_name': t.productName,
+      'type':         t.type.name,
+      'weight':       t.weight,
+      'unit_price':   t.unitPrice,
+      'total_price':  t.totalPrice,
+      'net_profit':   t.netProfit,
+      'date':         t.date.toIso8601String(),
+      'notes':        t.notes,
+    });
+  }
+
+  Future<List<ScrapTransaction>> getAllTransactions() async {
+    final db   = await database;
+    final maps = await db.query('transactions', orderBy: 'date DESC');
+    return maps.map((m) => ScrapTransaction(
+      id:          m['id'] as int,
+      productId:   m['product_id'] as int,
+      productName: m['product_name'] as String,
+      type: TransactionType.values.firstWhere((e) => e.name == m['type']),
+      weight:     (m['weight'] as num).toDouble(),
+      unitPrice:  (m['unit_price'] as num).toDouble(),
+      totalPrice: (m['total_price'] as num).toDouble(),
+      netProfit:  (m['net_profit'] as num? ?? 0).toDouble(),
+      date:       DateTime.parse(m['date'] as String),
+      notes:      m['notes'] as String?,
+    )).toList();
+  }
+
+  // ════════════════════════════════════
+  //  CAPITAL
+  // ════════════════════════════════════
+  Future<double> getCapital() async {
+    final db     = await database;
+    final result = await db.query('capital', where: 'id = 1');
+    if (result.isEmpty) return 0.0;
+    return (result.first['balance'] as num).toDouble();
+  }
+
+  Future<void> updateCapital(double balance) async {
+    final db = await database;
+    await db.update('capital', {'balance': balance},
+        where: 'id = 1', whereArgs: []);
   }
 }

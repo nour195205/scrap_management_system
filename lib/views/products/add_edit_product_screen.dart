@@ -252,11 +252,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     );
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final state = context.read<AppState>();
     if (_isEdit) {
-      state.updateProduct(widget.product!.copyWith(
+      await state.updateProduct(widget.product!.copyWith(
         name: _name.text.trim(),
         buyPrice: double.parse(_buy.text),
         sellPrice: double.parse(_sell.text),
@@ -264,7 +264,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         minStockAlert: double.parse(_minAlert.text),
       ));
     } else {
-      state.addProduct(
+      await state.addProduct(
         name: _name.text.trim(),
         buyPrice: double.parse(_buy.text),
         sellPrice: double.parse(_sell.text),

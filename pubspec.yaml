@@ -44,10 +44,10 @@ dependencies:
   # للحسابات الدقيقة والوقت
   intl: ^0.19.0
 
-  # لقاعدة البيانات المحلية - سيتم تفعيله عند بناء Windows
-  # sqflite_common_ffi: ^2.3.0+2
-  # path: ^1.9.0
-  # path_provider: ^2.1.2
+  # لقاعدة البيانات المحلية - Windows Desktop
+  sqflite_common_ffi: ^2.3.0+2
+  path: ^1.9.0
+  path_provider: ^2.1.2
 
   cupertino_icons: ^1.0.8
 

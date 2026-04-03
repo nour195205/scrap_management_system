@@ -158,9 +158,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
             child: Text('إلغاء', style: GoogleFonts.cairo()),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              final ok = state.deleteProduct(product.id);
+              final ok = await state.deleteProduct(product.id);
               if (!ok) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('لا يمكن الحذف - يوجد عمليات مرتبطة بهذا الصنف',
@@ -258,19 +258,23 @@ class _ProductRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${fmt.format(product.margin)} ج/كجم',
-                    style: GoogleFonts.cairo(
-                        fontSize: 13, color: AppColors.gold,
-                        fontWeight: FontWeight.w600)),
-                Text('${fmt.format(product.marginPercent)}%',
-                    style: GoogleFonts.cairo(
-                        fontSize: 11, color: AppColors.textSecondary)),
+                Text(
+                  '${fmt.format(product.margin)} ج/كجم',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cairo(
+                      fontSize: 12, color: AppColors.gold,
+                      fontWeight: FontWeight.w600)),
+                Text(
+                  '${fmt.format(product.marginPercent)}%',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cairo(
+                      fontSize: 11, color: AppColors.textSecondary)),
               ],
             ),
           ),
           // Actions
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 88,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
