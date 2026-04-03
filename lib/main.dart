@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
-import 'views/home_screen.dart';
-// import 'database/database_helper.dart';
+import 'package:provider/provider.dart';
+import 'services/app_state.dart';
+import 'app_theme.dart';
+import 'views/main_layout.dart';
 
 void main() {
-  // وقفنا كود الديسكتوب مؤقتاً عشان الويب
-  // WidgetsFlutterBinding.ensureInitialized();
-  // DatabaseHelper db = DatabaseHelper();
-  // await db.database;
-
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppState()..loadSampleData(),
+      child: const MizanyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MizanyApp extends StatelessWidget {
+  const MizanyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'ميزاني - إدارة الخردة',
-      theme: ThemeData(
-        // اخترنا لون مناسب للحديد والمخازن (BlueGrey)
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-        useMaterial3: true,
+      theme: AppTheme.dark,
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child!,
       ),
-      // دي الشاشة اللي هتفتح أول ما البرنامج يشتغل
-      home: const HomeScreen(),
+      home: const MainLayout(),
     );
   }
 }
