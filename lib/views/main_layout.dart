@@ -53,16 +53,9 @@ class MainLayout extends StatelessWidget {
               ),
               const VerticalDivider(width: 1),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: child,
-                  ),
-                  child: KeyedSubtree(
-                    key: ValueKey(state.navIndex),
-                    child: _screens[state.navIndex],
-                  ),
+                child: IndexedStack(
+                  index: state.navIndex,
+                  children: _screens,
                 ),
               ),
             ],

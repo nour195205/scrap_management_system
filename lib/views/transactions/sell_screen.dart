@@ -105,6 +105,7 @@ class _SellScreenState extends State<SellScreen> {
                               // Product + stock display
                               DropdownButtonFormField<Product>(
                                 value: _selectedProduct,
+                                isExpanded: true,
                                 decoration: InputDecoration(
                                   labelText: 'اختر الصنف',
                                   prefixIcon: const Icon(Icons.category_rounded,
@@ -121,10 +122,13 @@ class _SellScreenState extends State<SellScreen> {
                                     value: p,
                                     child: Row(
                                       children: [
-                                        Text(p.name, style: GoogleFonts.cairo(
-                                            color: AppColors.textPrimary)),
-                                        const Spacer(),
-                                        Text('($stockStr)',
+                                        Expanded(
+                                          child: Text(p.name, style: GoogleFonts.cairo(
+                                              color: AppColors.textPrimary),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        Text(' ($stockStr)',
                                             style: GoogleFonts.cairo(
                                                 color: p.isOutOfStock ? AppColors.loss : AppColors.textSecondary,
                                                 fontSize: 12)),
