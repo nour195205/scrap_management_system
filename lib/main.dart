@@ -9,13 +9,11 @@ import 'views/main_layout.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // تفعيل FFI للـ Desktop (Windows / Linux / macOS)
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
 
-  // تحميل البيانات من قاعدة البيانات
   final appState = AppState();
   await appState.initFromDatabase();
 
