@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/app_state.dart';
+import '../services/capital_security_service.dart';
 import '../app_theme.dart';
 import 'home_screen.dart';
 import 'products/products_screen.dart';
@@ -11,6 +12,9 @@ import 'transactions/transactions_history_screen.dart';
 import 'inventory/inventory_screen.dart';
 import 'reports/reports_screen.dart';
 import 'capital/capital_screen.dart';
+import 'capital/capital_lock_dialog.dart';
+import 'capital/capital_setup_dialog.dart';
+import 'currency/currency_counter_screen.dart';
 
 class MainLayout extends StatelessWidget {
   const MainLayout({super.key});
@@ -24,6 +28,7 @@ class MainLayout extends StatelessWidget {
     _NavItem(Icons.receipt_long_rounded,           'سجل العمليات'),
     _NavItem(Icons.bar_chart_rounded,              'التقارير'),
     _NavItem(Icons.account_balance_wallet_rounded, 'الخزنة'),
+    _NavItem(Icons.payments_rounded,               'عداد العملة'),
   ];
 
   static const _screens = [
@@ -35,7 +40,30 @@ class MainLayout extends StatelessWidget {
     TransactionsHistoryScreen(),
     ReportsScreen(),
     CapitalScreen(),
+    CurrencyCounterScreen(),
   ];
+
+  // ── فهرس شاشة الخزنة ──
+  static const _capitalIndex = 7;
+
+  /// التعامل مع الضغط على أي عنصر في القائمة
+  Future<void> _handleNavTap(
+      BuildContext context, AppState state, int index) async {
+    if (index == _capitalIndex) {
+      // تحقق هل تم ضبط باسوورد؟
+      final isSet = await CapitalSecurityService().isPasswordSet();
+      if (!isSet) {
+        // إعداد لأول مرة
+        final done = await showCapitalSetupDialog(context);
+        if (!done) return; // ألغى الإعداد
+      } else {
+        // طلب الباسوورد
+        final passed = await showCapitalLockDialog(context);
+        if (!passed) return; // ألغى أو خطأ
+      }
+    }
+    state.navigateTo(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +76,7 @@ class MainLayout extends StatelessWidget {
               _Sidebar(
                 items: _items,
                 selectedIndex: state.navIndex,
-                onSelect: state.navigateTo,
+                onSelect: (i) => _handleNavTap(context, state, i),
                 alertCount: alerts,
               ),
               const VerticalDivider(width: 1),

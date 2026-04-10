@@ -137,9 +137,13 @@ class AppState extends ChangeNotifier {
     _capitalBalance -= total;
     await _db.updateCapital(_capitalBalance);
 
-    // تحديث المخزون
-    product.currentStock += weightKg;
-    await _db.updateProductStock(productId, product.currentStock);
+    // حساب متوسط سعر الشراء الجديد (Moving Average Cost)
+    final newStock = product.currentStock + weightKg;
+    if (newStock > 0) {
+      product.buyPrice = ((product.currentStock * product.buyPrice) + total) / newStock;
+    }
+    product.currentStock = newStock;
+    await _db.updateProduct(product);
 
     // تسجيل العملية
     final tx = ScrapTransaction(
@@ -196,6 +200,125 @@ class AppState extends ChangeNotifier {
       unitPrice: unitPricePerKg, totalPrice: total, netProfit: profit, notes: notes,
     ));
 
+    notifyListeners();
+    return null;
+  }
+
+  // ═══════════════════════════════════════════
+  //  DELETE / UPDATE TRANSACTION
+  // ═══════════════════════════════════════════
+
+  /// حذف عملية وعكس تأثيرها على المخزون والخزنة
+  Future<String?> deleteTransaction(int transactionId) async {
+    final tx = _transactions.firstWhere(
+      (t) => t.id == transactionId,
+      orElse: () => throw StateError('not found'),
+    );
+
+    final product = getProduct(tx.productId);
+
+    if (tx.isBuy) {
+      // عكس الشراء: إرجاع الفلوس للخزنة وخصم المخزون
+      if (product != null) {
+        final newStock = product.currentStock - tx.weight;
+        if (newStock < 0) return 'لا يمكن الحذف: المخزون الحالي أقل من وزن العملية';
+        
+        // تعديل السعر ليعكس الحذف
+        if (newStock > 0) {
+          final oldTotalValue = (product.currentStock * product.buyPrice) - tx.totalPrice;
+          product.buyPrice = oldTotalValue > 0 ? (oldTotalValue / newStock) : product.buyPrice;
+        }
+        
+        product.currentStock = newStock;
+        await _db.updateProduct(product);
+      }
+      _capitalBalance += tx.totalPrice;
+    } else {
+      // عكس البيع: خصم الفلوس من الخزنة وإرجاع المخزون
+      if (product != null) {
+        product.currentStock += tx.weight;
+        await _db.updateProductStock(tx.productId, product.currentStock);
+      }
+      _capitalBalance -= tx.totalPrice;
+    }
+
+    await _db.updateCapital(_capitalBalance);
+    await _db.deleteTransaction(transactionId);
+    _transactions.removeWhere((t) => t.id == transactionId);
+    notifyListeners();
+    return null;
+  }
+
+  /// تعديل عملية: عكس القديمة ثم تطبيق الجديدة
+  Future<String?> updateTransaction({
+    required int transactionId,
+    required double newWeightKg,
+    required double newUnitPrice,
+    String? newNotes,
+  }) async {
+    final oldTx = _transactions.firstWhere(
+      (t) => t.id == transactionId,
+      orElse: () => throw StateError('not found'),
+    );
+    if (newWeightKg <= 0) return 'الوزن يجب أن يكون أكبر من صفر';
+    if (newUnitPrice <= 0) return 'السعر يجب أن يكون أكبر من صفر';
+
+    final product = getProduct(oldTx.productId);
+    final weightDiff  = newWeightKg - oldTx.weight;
+    final newTotal    = newWeightKg * newUnitPrice;
+    final totalDiff   = newTotal - oldTx.totalPrice;
+
+    if (oldTx.isBuy) {
+      // تعديل شراء: فرق المخزون وفرق الخزنة
+      if (product != null) {
+        final newStock = product.currentStock + weightDiff;
+        if (newStock < 0) return 'لا يمكن التعديل: المخزون سيصبح سالبًا';
+        
+        // تعديل متوسط السعر
+        if (newStock > 0) {
+          final valueBeforeOldTx = (product.currentStock * product.buyPrice) - oldTx.totalPrice;
+          final newValue = valueBeforeOldTx + newTotal;
+          product.buyPrice = newValue > 0 ? (newValue / newStock) : product.buyPrice;
+        }
+        
+        product.currentStock = newStock;
+        await _db.updateProduct(product);
+      }
+      _capitalBalance -= totalDiff;
+    } else {
+      // تعديل بيع: عكس فرق المخزون وفرق الخزنة
+      if (product != null) {
+        final newStock = product.currentStock - weightDiff;
+        if (newStock < 0) return 'لا يمكن التعديل: المخزون سيصبح سالبًا';
+        product.currentStock = newStock;
+        await _db.updateProductStock(oldTx.productId, newStock);
+      }
+      _capitalBalance += totalDiff;
+    }
+
+    await _db.updateCapital(_capitalBalance);
+
+    double newProfit = oldTx.netProfit;
+    if (oldTx.isSell && product != null) {
+      newProfit = (newUnitPrice - product.buyPrice) * newWeightKg;
+    }
+
+    final updatedTx = ScrapTransaction(
+      id: oldTx.id,
+      productId: oldTx.productId,
+      productName: oldTx.productName,
+      type: oldTx.type,
+      weight: newWeightKg,
+      unitPrice: newUnitPrice,
+      totalPrice: newTotal,
+      netProfit: newProfit,
+      date: oldTx.date,
+      notes: newNotes,
+    );
+
+    await _db.updateTransaction(updatedTx);
+    final idx = _transactions.indexWhere((t) => t.id == transactionId);
+    if (idx != -1) _transactions[idx] = updatedTx;
     notifyListeners();
     return null;
   }

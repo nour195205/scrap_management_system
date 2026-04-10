@@ -1,42 +1,66 @@
-# برنامج ميزاني (Mizany App) ⚖️
+# ⚖️ برنامج ميزاني (Mizany App)
+### نظام متكامل لإدارة وتجارة الخردة (حديد، نحاس، كرتون، إلخ)
+**Mizany App** is a professional, offline Desktop solution for scrap metal trade management, designed for speed, security, and ease of use.
 
-نظام متكامل لإدارة محلات وتجارة الخردة (حديد، نحاس، كرتون، إلخ) يعمل كتطبيق سطح مكتب (Desktop Application) أوفلاين بالكامل لضمان سرعة الأداء وسرية البيانات.
+---
 
-## 🎥 فيديو توضيحي للمشروع (Demo)
-شاهد طريقة عمل البرنامج وتفاصيل الواجهة من هنا:
-[![Mizany App Demo](https://img.youtube.com/vi/RyS4XPO-e-Q/0.jpg)](https://youtu.be/RyS4XPO-e-Q)
+## 🎥 Demo Video | الفيديو التوضيحي
+Check out the demo to see the app in action:
 
-## ✨ أهم المميزات
-* **إدارة المخزون:** متابعة دقيقة للأوزان (بالكيلو والطن) والكميات المتاحة لكل صنف.
-* **المبيعات والمشتريات:** تسجيل الحركات المالية وحساب صافي الربح الفعلي لكل عملية بيع بناءً على سعر الشراء.
-* **إدارة الخزنة:** متابعة حية ومستمرة لرأس المال.
-* **التقارير والإحصائيات:** استخراج التقارير وتصديرها بصيغة PDF أو Excel لمراجعة حركة الشغل (يومي، شهري، سنوي).
-* **دعم الأوفلاين:** قاعدة بيانات محلية لا تحتاج للاتصال بالإنترنت.
+<!-- Use HTML to center the link/video if possible, or just a clear link -->
+<div align="center">
+  <a href="docs/vedio/scrap_management_system.mp4">
+    <img src="https://img.youtube.com/vi/RyS4XPO-e-Q/0.jpg" alt="Mizany App Demo" width="600">
+  </a>
+  <p><i>اضغط على الصورة أو الرابط لمشاهدة الفيديو</i></p>
+  <p><a href="docs/vedio/scrap_management_system.mp4">📺 مشاهدة الفيديو المحلي (Local Video)</a> | <a href="https://youtu.be/RyS4XPO-e-Q">🔗 رابط يوتيوب (YouTube)</a></p>
+</div>
 
-## 🛠️ التقنيات المستخدمة (Tech Stack)
-* **Frontend:** Flutter (Dart)
-* **Database:** SQLite (sqflite_common_ffi)
-* **Desktop Support:** Windows App Build
-* **Packaging:** Inno Setup (.exe Installer)
+---
 
-## 📄 التوثيق (Documentation)
-يحتوي مجلد `docs` المرفق في هذا المستودع على مستندات المشروع، وتشمل وثيقة متطلبات المستخدم (User Requirements) ومتطلبات النظام (System Requirements).
+## ✨ Key Features | أهم المميزات
+- **📦 Inventory Management (إدارة المخزون):** Precise weight tracking (kg/ton) for every item.
+- **💰 Sales & Purchases (المبيعات والمشتريات):** Record transactions and calculate real net profit based on purchase history (MAC system).
+- **🏦 Treasury & Capital (الخزنة ورأس المال):** Live monitoring of your financial status and capital.
+- **📊 Reports & Statistics (التقارير والإحصائيات):** Export professional PDF and Excel reports for daily, monthly, or yearly activity.
+- **🔒 Offline & Secure (أوفلاين بالكامل):** Local database ensures your data stays private and accessible without internet.
+- **🛡️ Access Security:** Password-protected capital section for enhanced security.
 
-## 🚀 طريقة التشغيل للمطورين (Run Locally)
+---
 
-1. قم بعمل استنساخ (Clone) للمستودع:
+## 🛠️ Tech Stack | التقنيات المستخدمة
+- **Core:** Flutter (Dart) 🚀
+- **Database:** SQLite (sqflite_ffi) 🗄️
+- **Exporting:** PDF & Excel 📄
+- **UI:** Google Fonts (Outfit) & Provider for State Management 🎨
+- **OS:** Windows Desktop Application 💻
+
+---
+
+## 📄 Documentation | التوثيق
+Detailed project documentation is available in the `docs` folder, including:
+- [System Architecture](docs/pdf/System%20Architecture.pdf)
+- [Use Case & Activity Diagrams](docs/pdf/)
+- [User & System Requirements](docs/pdf/user&sys_requirments.pdf)
+
+---
+
+## 🚀 How to Run | طريقة التشغيل
+1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/nour195205/scrap_management_system.git](https://github.com/nour195205/scrap_management_system.git)
+   git clone https://github.com/nour195205/scrap_management_system.git
    ```
-2. قم بتحميل الاعتمادات والمكتبات:
+2. **Install dependencies:**
    ```bash
    flutter pub get
    ```
-3. لتشغيل البرنامج على نظام تشغيل ويندوز:
+3. **Run on Windows:**
    ```bash
    flutter run -d windows
    ```
-4. لاستخراج نسخة نهائية للعميل (Production):
-   ```bash
-   flutter build windows
-   ```
+
+---
+
+## 👨‍💻 Developer
+Developed with ❤️ by **Nour Ashour**.
+[GitHub Profile](https://github.com/nour195205)

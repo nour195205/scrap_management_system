@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/product_model.dart';
 import '../models/transaction_model.dart';
+import '../services/capital_security_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -19,11 +20,15 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dir  = await getApplicationDocumentsDirectory();
-    final path = join(dir.path, 'mizany_v2.db');
+    final path = join(dir.path, 'qasem_v1.db');
 
     return await databaseFactoryFfi.openDatabase(
       path,
-      options: OpenDatabaseOptions(version: 1, onCreate: _onCreate),
+      options: OpenDatabaseOptions(
+        version: 2,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      ),
     );
   }
 
@@ -66,6 +71,26 @@ class DatabaseHelper {
       )
     ''');
     await db.insert('capital', {'id': 1, 'balance': 0.0});
+
+    // ── جدول أمان الخزنة ──
+    await _createSecurityTable(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createSecurityTable(db);
+    }
+  }
+
+  Future<void> _createSecurityTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS capital_security (
+        id               INTEGER PRIMARY KEY,
+        password_hash    TEXT NOT NULL,
+        security_question TEXT NOT NULL,
+        security_answer_hash TEXT NOT NULL
+      )
+    ''');
   }
 
   // ════════════════════════════════════
@@ -154,6 +179,26 @@ class DatabaseHelper {
     )).toList();
   }
 
+  Future<void> deleteTransaction(int id) async {
+    final db = await database;
+    await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateTransaction(ScrapTransaction t) async {
+    final db = await database;
+    await db.update('transactions', {
+      'product_id':   t.productId,
+      'product_name': t.productName,
+      'type':         t.type.name,
+      'weight':       t.weight,
+      'unit_price':   t.unitPrice,
+      'total_price':  t.totalPrice,
+      'net_profit':   t.netProfit,
+      'date':         t.date.toIso8601String(),
+      'notes':        t.notes,
+    }, where: 'id = ?', whereArgs: [t.id]);
+  }
+
   // ════════════════════════════════════
   //  CAPITAL
   // ════════════════════════════════════
@@ -168,5 +213,36 @@ class DatabaseHelper {
     final db = await database;
     await db.update('capital', {'balance': balance},
         where: 'id = 1', whereArgs: []);
+  }
+
+  // ════════════════════════════════════
+  //  CAPITAL SECURITY
+  // ════════════════════════════════════
+  Future<CapitalSecurityData?> getCapitalSecurity() async {
+    final db     = await database;
+    final result = await db.query('capital_security', where: 'id = 1');
+    if (result.isEmpty) return null;
+    final row = result.first;
+    return CapitalSecurityData(
+      passwordHash:       row['password_hash'] as String,
+      securityQuestion:   row['security_question'] as String,
+      securityAnswerHash: row['security_answer_hash'] as String,
+    );
+  }
+
+  Future<void> saveCapitalSecurity(CapitalSecurityData data) async {
+    final db  = await database;
+    final existing = await db.query('capital_security', where: 'id = 1');
+    final map = {
+      'id': 1,
+      'password_hash':       data.passwordHash,
+      'security_question':   data.securityQuestion,
+      'security_answer_hash': data.securityAnswerHash,
+    };
+    if (existing.isEmpty) {
+      await db.insert('capital_security', map);
+    } else {
+      await db.update('capital_security', map, where: 'id = 1');
+    }
   }
 }
